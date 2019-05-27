@@ -47,7 +47,7 @@ public class BlobStorageWriter extends IndyJava.API {
 		public void callback(int xcommand_handle, int err, int handle) {
 
 			CompletableFuture<BlobStorageWriter> future = (CompletableFuture<BlobStorageWriter>) removeFuture(xcommand_handle);
-			if (! checkResult(future, err)) return;
+			if (! checkCallback(future, err)) return;
 
 			BlobStorageWriter blobStorageWriter = new BlobStorageWriter(handle);
 
@@ -75,7 +75,7 @@ public class BlobStorageWriter extends IndyJava.API {
 				config,
 				openWriterCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}

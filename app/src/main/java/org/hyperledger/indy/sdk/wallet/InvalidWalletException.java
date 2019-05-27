@@ -14,7 +14,8 @@ public class InvalidWalletException extends IndyException
 	/**
 	 * Initializes a new WalletClosedException.
 	 */
-	public InvalidWalletException() {
-		super(message, ErrorCode.WalletInvalidHandle.value());
-	}
+	public InvalidWalletException() 
+    {
+    	super(message, ErrorCode.WalletInvalidHandle.value());
+    }
 }

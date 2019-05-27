@@ -14,7 +14,8 @@ public class UnknownCryptoException extends IndyException
 	/**
 	 * Initializes a new UnknownCryptoException.
 	 */
-	public UnknownCryptoException() {
-		super(message, ErrorCode.UnknownCryptoTypeError.value());
-	}
+	public UnknownCryptoException() 
+    {
+    	super(message, ErrorCode.UnknownCryptoTypeError.value());
+    }
 }

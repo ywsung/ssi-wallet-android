@@ -14,7 +14,8 @@ public class CredentialRevokedException extends IndyException
 	/**
 	 * Initializes a new CredentialRevokedException.
 	 */
-	public CredentialRevokedException() {
-		super(message, ErrorCode.AnoncredsCredentialRevoked.value());
-	}
+	public CredentialRevokedException()
+    {
+    	super(message, ErrorCode.AnoncredsCredentialRevoked.value());
+    }
 }
