@@ -14,7 +14,8 @@ public class CredDefAlreadyExistsException extends IndyException
 	/**
 	 * Initializes a new CredDefAlreadyExistsException.
 	 */
-	public CredDefAlreadyExistsException() {
-		super(message, ErrorCode.AnoncredsCredDefAlreadyExistsError.value());
-	}
+	public CredDefAlreadyExistsException()
+    {
+    	super(message, ErrorCode.AnoncredsCredDefAlreadyExistsError.value());
+    }
 }

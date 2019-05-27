@@ -42,7 +42,7 @@ public class Anoncreds extends IndyJava.API {
 		public void callback(int xcommand_handle, int err, String schema_id, String schema_json) {
 
 			CompletableFuture<IssuerCreateSchemaResult> future = (CompletableFuture<IssuerCreateSchemaResult>) removeFuture(xcommand_handle);
-			if (! checkResult(future, err)) return;
+			if (! checkCallback(future, err)) return;
 
 			IssuerCreateSchemaResult result = new IssuerCreateSchemaResult(schema_id, schema_json);
 			future.complete(result);
@@ -58,7 +58,7 @@ public class Anoncreds extends IndyJava.API {
 		public void callback(int xcommand_handle, int err, String credential_def_id, String credential_def_json) {
 
 			CompletableFuture<IssuerCreateAndStoreCredentialDefResult> future = (CompletableFuture<IssuerCreateAndStoreCredentialDefResult>) removeFuture(xcommand_handle);
-			if (! checkResult(future, err)) return;
+			if (! checkCallback(future, err)) return;
 
 			IssuerCreateAndStoreCredentialDefResult result = new IssuerCreateAndStoreCredentialDefResult(credential_def_id, credential_def_json);
 			future.complete(result);
@@ -74,7 +74,7 @@ public class Anoncreds extends IndyJava.API {
 		public void callback(int xcommand_handle, int err, String revoc_reg_id, String revoc_reg_def_json, String revoc_reg_entry_json) {
 
 			CompletableFuture<IssuerCreateAndStoreRevocRegResult> future = (CompletableFuture<IssuerCreateAndStoreRevocRegResult>) removeFuture(xcommand_handle);
-			if (! checkResult(future, err)) return;
+			if (! checkCallback(future, err)) return;
 
 			IssuerCreateAndStoreRevocRegResult result = new IssuerCreateAndStoreRevocRegResult(revoc_reg_id, revoc_reg_def_json, revoc_reg_entry_json);
 			future.complete(result);
@@ -90,7 +90,7 @@ public class Anoncreds extends IndyJava.API {
 		public void callback(int xcommand_handle, int err, String str) {
 
 			CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(xcommand_handle);
-			if (! checkResult(future, err)) return;
+			if (! checkCallback(future, err)) return;
 
 			String result = str;
 			future.complete(result);
@@ -106,7 +106,7 @@ public class Anoncreds extends IndyJava.API {
 		public void callback(int xcommand_handle, int err, String cred_json, String cred_rev_id, String revoc_reg_delta_json) {
 
 			CompletableFuture<IssuerCreateCredentialResult> future = (CompletableFuture<IssuerCreateCredentialResult>) removeFuture(xcommand_handle);
-			if (! checkResult(future, err)) return;
+			if (! checkCallback(future, err)) return;
 
 			IssuerCreateCredentialResult result = new IssuerCreateCredentialResult(cred_json, cred_rev_id, revoc_reg_delta_json);
 			future.complete(result);
@@ -123,7 +123,7 @@ public class Anoncreds extends IndyJava.API {
 		public void callback(int xcommand_handle, int err, String credential_req_json, String credential_req_metadata_json) {
 
 			CompletableFuture<ProverCreateCredentialRequestResult> future = (CompletableFuture<ProverCreateCredentialRequestResult>) removeFuture(xcommand_handle);
-			if (! checkResult(future, err)) return;
+			if (! checkCallback(future, err)) return;
 
 			ProverCreateCredentialRequestResult result = new ProverCreateCredentialRequestResult(credential_req_json, credential_req_metadata_json);
 			future.complete(result);
@@ -139,7 +139,7 @@ public class Anoncreds extends IndyJava.API {
 		public void callback(int xcommand_handle, int err, Boolean valid) {
 
 			CompletableFuture<Boolean> future = (CompletableFuture<Boolean>) removeFuture(xcommand_handle);
-			if (! checkResult(future, err)) return;
+			if (! checkCallback(future, err)) return;
 
 			Boolean result = valid;
 			future.complete(result);
@@ -164,7 +164,7 @@ public class Anoncreds extends IndyJava.API {
 	 * @param issuerDid The DID of the issuer.
 	 * @param name      Human-readable name of schema.
 	 * @param version   Version of schema.
-	 * @param attrs:    List of schema attributes descriptions (the number of attributes should be less or equal than 125)
+	 * @param attrs:    List of schema attributes descriptions
 	 * @return A future resolving to IssuerCreateSchemaResult object containing:
 	 * schemaId: identifier of created schema
 	 * schemaJson: schema as json
@@ -192,7 +192,7 @@ public class Anoncreds extends IndyJava.API {
 				attrs,
 				issuerCreateSchemaCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
@@ -250,7 +250,7 @@ public class Anoncreds extends IndyJava.API {
 				configJson,
 				issuerCreateAndStoreCredentialDefCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
@@ -325,7 +325,7 @@ public class Anoncreds extends IndyJava.API {
 				tailsWriter.getBlobStorageWriterHandle(),
 				issuerCreateAndStoreRevocRegCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
@@ -365,7 +365,7 @@ public class Anoncreds extends IndyJava.API {
 				credDefId,
 				stringCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
@@ -436,7 +436,7 @@ public class Anoncreds extends IndyJava.API {
 				blobStorageReaderHandle,
 				issuerCreateCredentialCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
@@ -480,7 +480,7 @@ public class Anoncreds extends IndyJava.API {
 				credRevocId,
 				stringCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
@@ -524,7 +524,7 @@ public class Anoncreds extends IndyJava.API {
 //				credRevocId,
 //				issuerRecoverCredentialCb);
 //
-//		checkResult(future, result);
+//		checkResult(result);
 //
 //		return future;
 //	}
@@ -554,7 +554,7 @@ public class Anoncreds extends IndyJava.API {
 				otherRevRegDelta,
 				stringCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
@@ -584,7 +584,7 @@ public class Anoncreds extends IndyJava.API {
 				masterSecretId,
 				stringCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
@@ -612,7 +612,6 @@ public class Anoncreds extends IndyJava.API {
 	 *      "nonce": string
 	 *    }
 	 * credReqMetadataJson: Credential request metadata json for processing of received form Issuer credential.
-	 *    Note: credReqMetadataJson mustn't be shared with Issuer.
 	 * @throws IndyException Thrown if an error occurs when calling the underlying SDK.
 	 */
 	public static CompletableFuture<ProverCreateCredentialRequestResult> proverCreateCredentialReq(
@@ -642,7 +641,7 @@ public class Anoncreds extends IndyJava.API {
 				masterSecretId,
 				proverCreateCredentialReqCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
@@ -701,7 +700,7 @@ public class Anoncreds extends IndyJava.API {
 				revRegDefJson,
 				stringCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
@@ -753,7 +752,7 @@ public class Anoncreds extends IndyJava.API {
 				filter,
 				stringCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
@@ -792,7 +791,7 @@ public class Anoncreds extends IndyJava.API {
 				credId,
 				stringCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
@@ -889,7 +888,7 @@ public class Anoncreds extends IndyJava.API {
 				proofRequest,
 				stringCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
@@ -961,7 +960,7 @@ public class Anoncreds extends IndyJava.API {
 	 * Each proof is associated with a credential and corresponding schema_id, cred_def_id, rev_reg_id and timestamp.
 	 * There is also aggregated proof part common for all credential proofs.
 	 *     {
-	 *         "requested_proof": {
+	 *         "requested": {
 	 *             "revealed_attrs": {
 	 *                 "requested_attr1_id": {sub_proof_index: number, raw: string, encoded: string},
 	 *                 "requested_attr4_id": {sub_proof_index: number: string, encoded: string},
@@ -1018,7 +1017,7 @@ public class Anoncreds extends IndyJava.API {
 				revStates,
 				stringCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
@@ -1047,7 +1046,7 @@ public class Anoncreds extends IndyJava.API {
 	 *     }
 	 * @param proof          Proof json
 	 {     {
-	 *         "requested_proof": {
+	 *         "requested": {
 	 *             "revealed_attrs": {
 	 *                 "requested_attr1_id": {sub_proof_index: number, raw: string, encoded: string},
 	 *                 "requested_attr4_id": {sub_proof_index: number: string, encoded: string},
@@ -1131,7 +1130,7 @@ public class Anoncreds extends IndyJava.API {
 				revocRegs,
 				verifierVerifyProofCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
@@ -1175,7 +1174,7 @@ public class Anoncreds extends IndyJava.API {
 				credRevId,
 				stringCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
@@ -1224,7 +1223,7 @@ public class Anoncreds extends IndyJava.API {
 				credRevId,
 				stringCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}

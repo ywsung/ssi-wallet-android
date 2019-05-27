@@ -47,7 +47,7 @@ public class BlobStorageReader extends IndyJava.API {
 		public void callback(int xcommand_handle, int err, int handle) {
 
 			CompletableFuture<BlobStorageReader> future = (CompletableFuture<BlobStorageReader>) removeFuture(xcommand_handle);
-			if (! checkResult(future, err)) return;
+			if (! checkCallback(future, err)) return;
 
 			BlobStorageReader tailsReader = new BlobStorageReader(handle);
 
@@ -75,7 +75,7 @@ public class BlobStorageReader extends IndyJava.API {
 				config,
 				openReaderCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}

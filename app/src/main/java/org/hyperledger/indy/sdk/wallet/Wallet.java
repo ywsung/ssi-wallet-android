@@ -1,5 +1,8 @@
 package org.hyperledger.indy.sdk.wallet;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -48,25 +51,9 @@ public class Wallet extends IndyJava.API implements AutoCloseable {
 		public void callback(int xcommand_handle, int err) {
 
 			CompletableFuture<Void> future = (CompletableFuture<Void>) removeFuture(xcommand_handle);
-			if (! checkResult(future, err)) return;
+			if (! checkCallback(future, err)) return;
 
 			Void result = null;
-			future.complete(result);
-		}
-	};
-
-	/**
-	 * Callback used when function returning string completes.
-	 */
-	private static Callback stringCb = new Callback() {
-
-		@SuppressWarnings({"unused", "unchecked"})
-		public void callback(int xcommand_handle, int err, String str) {
-
-			CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(xcommand_handle);
-			if (! checkResult(future, err)) return;
-
-			String result = str;
 			future.complete(result);
 		}
 	};
@@ -80,7 +67,7 @@ public class Wallet extends IndyJava.API implements AutoCloseable {
 		public void callback(int xcommand_handle, int err, int handle) {
 
 			CompletableFuture<Wallet> future = (CompletableFuture<Wallet>) removeFuture(xcommand_handle);
-			if (! checkResult(future, err)) return;
+			if (! checkCallback(future, err)) return;
 
 			Wallet wallet = new Wallet(handle);
 
@@ -92,6 +79,60 @@ public class Wallet extends IndyJava.API implements AutoCloseable {
 	/*
 	 * STATIC METHODS
 	 */
+
+	private static final List<WalletType> REGISTERED_WALLET_TYPES = Collections.synchronizedList(new ArrayList<WalletType>());
+
+	/**
+	 * Registers custom wallet implementation.
+	 *
+	 * @param xtype Wallet type name.
+	 * @param walletType An instance of a WalletType subclass
+	 * @return A future that resolves no value.
+	 * @throws IndyException Thrown if a call to the underlying SDK fails.
+	 * @throws InterruptedException Thrown...???
+	 */
+	public static CompletableFuture<Void> registerWalletType(
+		String xtype,
+		WalletType walletType) throws IndyException, InterruptedException {
+
+		ParamGuard.notNullOrWhiteSpace(xtype, "xtype");
+		ParamGuard.notNull(walletType, "walletType");
+
+		CompletableFuture<Void> future = new CompletableFuture<Void>();
+		int commandHandle = addFuture(future);
+
+		REGISTERED_WALLET_TYPES.add(walletType);
+
+		int result = LibIndy.api.indy_register_wallet_storage( //TODO:FIXME
+				commandHandle,
+				xtype,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				voidCb);
+
+		checkResult(result);
+
+		return future;
+	}
 
 	/**
 	 * Creates a new secure wallet with the given unique name.
@@ -108,22 +149,17 @@ public class Wallet extends IndyJava.API implements AutoCloseable {
 	 *                      For 'default' storage type configuration is:
 	 *   {
 	 *     "path": optional["string"], Path to the directory with wallet files.
-	 *             Defaults to $HOME/.indy_client/wallet.
+	 *             Defaults to $HOME/.indy_client/wallets.
 	 *             Wallet will be stored in the file {path}/{id}/sqlite.db
 	 *   }
 	 * }
 	 * @param credentials Wallet credentials json
 	 * {
-	 *   "key": string, Key or passphrase used for wallet key derivation.
-	 *                  Look to key_derivation_method param for information about supported key derivation methods.
+	 *   "key": string, Passphrase used to derive wallet master key
 	 *   "storage_credentials": optional[{credentials json}] Credentials for wallet storage. Storage type defines set of supported keys.
 	 *                          Can be optional if storage supports default configuration.
 	 *                           For 'default' storage type should be empty.
-	 *   "key_derivation_method": optional[string] Algorithm to use for wallet key derivation:
-	 *                           ARGON2I_MOD - derive secured wallet master key (used by default)
-	 *                           ARGON2I_INT - derive secured wallet master key (less secured but faster)
-	 *                           RAW - raw wallet key master provided (skip derivation).
-	 *                              RAW keys can be generated with generateWalletKey call
+	 *
 	 * }
 	 * @return A future that resolves no value.
 	 * @throws IndyException Thrown if a call to the underlying SDK fails.
@@ -141,7 +177,7 @@ public class Wallet extends IndyJava.API implements AutoCloseable {
 				credentials,
 				voidCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
@@ -161,28 +197,18 @@ public class Wallet extends IndyJava.API implements AutoCloseable {
 	 *                      For 'default' storage type configuration is:
 	 *   {
 	 *     "path": optional["string"], Path to the directory with wallet files.
-	 *             Defaults to $HOME/.indy_client/wallet.
+	 *             Defaults to $HOME/.indy_client/wallets.
 	 *             Wallet will be stored in the file {path}/{id}/sqlite.db
 	 *   }
 	 * }
 	 * @param credentials Wallet credentials json
 	 *   {
-	 *       "key": string, Key or passphrase used for wallet key derivation.
-	 *                      Look to key_derivation_method param for information about supported key derivation methods.
-	 *       "rekey": optional["string"], If present than wallet master key will be rotated to a new one.
+	 *       "key": string, Passphrase used to derive current wallet master key
+	 *       "rekey": optional["string"], If present than wallet master key will be rotated to a new one
+	 *                                  derived from this passphrase.
 	 *       "storage_credentials": optional[{credentiails object}] Credentials for wallet storage. Storage type defines set of supported keys.
 	 *                              Can be optional if storage supports default configuration.
 	 *                               For 'default' storage type should be empty.
-	 *   "key_derivation_method": optional[string] Algorithm to use for wallet key derivation:
-	 *                           ARGON2I_MOD - derive secured wallet master key (used by default)
-	 *                           ARGON2I_INT - derive secured wallet master key (less secured but faster)
-	 *                           RAW - raw wallet key master provided (skip derivation).
-	 *                              RAW keys can be generated with generateWalletKey call
-	 *   "rekey_derivation_method": optional[string] Algorithm to use for wallet rekey derivation:
-	 *                           ARGON2I_MOD - derive secured wallet master rekey (used by default)
-	 *                           ARGON2I_INT - derive secured wallet master rekey (less secured but faster)
-	 *                           RAW - raw wallet master rekey provided (skip derivation).
-	 *                              RAW keys can be generated with generateWalletKey call
 	 *
 	 *   }
 	 * @return A future that resolves no value.
@@ -202,7 +228,7 @@ public class Wallet extends IndyJava.API implements AutoCloseable {
 				credentials,
 				openWalletCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
@@ -229,7 +255,7 @@ public class Wallet extends IndyJava.API implements AutoCloseable {
 				handle,
 				voidCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
@@ -249,22 +275,19 @@ public class Wallet extends IndyJava.API implements AutoCloseable {
 	 *                      For 'default' storage type configuration is:
 	 *   {
 	 *     "path": optional["string"], Path to the directory with wallet files.
-	 *             Defaults to $HOME/.indy_client/wallet.
+	 *             Defaults to $HOME/.indy_client/wallets.
 	 *             Wallet will be stored in the file {path}/{id}/sqlite.db
 	 *   }
 	 * }
 	 * @param credentials Wallet credentials json
 	 *   {
-	 *       "key": string, Key or passphrase used for wallet key derivation.
-	 *                      Look to key_derivation_method param for information about supported key derivation methods.
+	 *       "key": string, Passphrase used to derive current wallet master key
+	 *       "rekey": optional["string"], If present than wallet master key will be rotated to a new one
+	 *                                  derived from this passphrase.
 	 *       "storage_credentials": optional[{credentials json}] Credentials for wallet storage. Storage type defines set of supported keys.
 	 *                              Can be optional if storage supports default configuration.
 	 *                               For 'default' storage type should be empty.
-	 *       "key_derivation_method": optional[string] Algorithm to use for wallet key derivation:
-	 *                           ARGON2I_MOD - derive secured wallet master key (used by default)
-	 *                           ARGON2I_INT - derive secured wallet master key (less secured but faster)
-	 *                           RAW - raw wallet key master provided (skip derivation).
-	 *                              RAW keys can be generated with generateWalletKey call
+	 *
 	 *   }
 	 *                       
 	 * @return A future that resolves no value.
@@ -283,7 +306,7 @@ public class Wallet extends IndyJava.API implements AutoCloseable {
 				credentials,
 				voidCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
@@ -295,13 +318,7 @@ public class Wallet extends IndyJava.API implements AutoCloseable {
 	 * @param exportConfigJson: JSON containing settings for input operation.
 	 *   {
 	 *     "path": "string", Path of the file that contains exported wallet content
-	 *     "key": string, Key or passphrase used for wallet export key derivation.
-	 *                    Look to key_derivation_method param for information about supported key derivation methods.
-	 *     "key_derivation_method": optional[string] algorithm to use for export key derivation:
-	 *                           ARGON2I_MOD - derive secured wallet export key (used by default)
-	 *                           ARGON2I_INT - derive secured wallet export key (less secured but faster)
-	 *                           RAW - raw wallet export master provided (skip derivation).
-	 *                              RAW keys can be generated with generateWalletKey call
+	 *     "key": "string", Passphrase used to derive export key
 	 *   }
 	 * @return A future that resolves no value.
 	 * @throws IndyException Thrown if a call to the underlying SDK fails.
@@ -324,7 +341,7 @@ public class Wallet extends IndyJava.API implements AutoCloseable {
 				exportConfigJson,
 				voidCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
@@ -347,27 +364,17 @@ public class Wallet extends IndyJava.API implements AutoCloseable {
 	 *                      For 'default' storage type configuration is:
 	 *   {
 	 *     "path": optional["string"], Path to the directory with wallet files.
-	 *             Defaults to $HOME/.indy_client/wallet.
+	 *             Defaults to $HOME/.indy_client/wallets.
 	 *             Wallet will be stored in the file {path}/{id}/sqlite.db
 	 *   }
 	 * }
-	 * @param credentials Wallet credentials json
+	 * @param importConfigJson Wallet credentials json
 	 * {
-	 *    "key": string, Key or passphrase used for wallet key derivation.
-	 *                   Look to key_derivation_method param for information about supported key derivation methods.
+	 *   "key": string, Passphrase used to derive wallet master key
 	 *   "storage_credentials": optional[{credentials json}] Credentials for wallet storage. Storage type defines set of supported keys.
 	 *                          Can be optional if storage supports default configuration.
 	 *                          For 'default' storage type should be empty.
-	 *   "key_derivation_method": optional[string] Algorithm to use for wallet key derivation:
-	 *                           ARGON2I_MOD - derive secured wallet master key (used by default)
-	 *                           ARGON2I_INT - derive secured wallet master key (less secured but faster)
-	 *                           RAW - raw wallet key master provided (skip derivation).
-	 *                              RAW keys can be generated with generateWalletKey call
-	 * }	
-	 * @param importConfigJson Import settings json.
-	 * {
-	 *   "path": "string", Path of the file that contains exported wallet content
-	 *   "key": "string",  Key used for export of the wallet
+	 *
 	 * }
 	 * @return A future that resolves no value.
 	 * @throws IndyException Thrown if a call to the underlying SDK fails.
@@ -389,41 +396,11 @@ public class Wallet extends IndyJava.API implements AutoCloseable {
 				importConfigJson,
 				voidCb);
 
-		checkResult(future, result);
+		checkResult(result);
 
 		return future;
 	}
 
-	/**
-	 * Generate wallet master key.
-	 * Returned key is compatible with "RAW" key derivation method.
-	 * It allows to avoid expensive key derivation for use cases when wallet keys can be stored in a secure enclave.
-	 *
-	 * @param config (optional) key configuration json.
-	 * {
-	 *   "seed": string, (optional) Seed that allows deterministic key creation (if not set random one will be created).
-	 *                              Can be UTF-8, base64 or hex string.
-	 * }
-	 *   
-	 * @return A future that resolves to key.
-	 * @throws IndyException Thrown if a call to the underlying SDK fails.
-	 */
-	public static CompletableFuture<String> generateWalletKey(
-			String config) throws IndyException {
-
-		CompletableFuture<String> future = new CompletableFuture<String>();
-		int commandHandle = addFuture(future);
-
-		int result = LibIndy.api.indy_generate_wallet_key(
-				commandHandle,
-				config,
-				stringCb);
-
-		checkResult(future, result);
-
-		return future;
-	}
-	
 	/*
 	 * INSTANCE METHODS
 	 */
